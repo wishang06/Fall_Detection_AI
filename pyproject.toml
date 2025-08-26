@@ -6,4 +6,7 @@ readme = "README.md"
 requires-python = ">=3.13"
 dependencies = [
     "faster-whisper>=1.2.0",
+    "numpy>=2.3.2",
+    "pandas>=2.3.2",
+    "sounddevice>=0.5.2",
 ]
