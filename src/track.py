@@ -121,6 +121,9 @@ class BodyData:
         
         return NotImplemented
 
+    def __sub__(self, o: Self) -> Self:
+        return self + (-1.0 * o)
+
     # returns the magnitude of all body data
     def get_mag(self):
         result = BodyData(1)
@@ -150,6 +153,28 @@ class BodyData:
     # returns the magnitude of the sum of all body data
     def get_net_mag(self):
         return np.linalg.norm(self.get_net())
+    
+    def __str__(self):
+        return f"(\n    Head: {self.head},\n    Body: {self.body},\n    Right Arm: {self.right_arm},\n    Left Arm: {self.left_arm},\n    Right Leg: {self.right_leg},\n    Left Leg: {self.left_leg}\n)"
+    
+    def copy(self, o: Self):
+        self.head = o.head
+        self.body = o.body
+        self.right_shoulder = o.right_shoulder
+        self.right_arm = o.right_arm
+        self.right_hand = o.right_hand
+        self.right_thumb = o.right_thumb
+        self.right_thigh = o.right_thigh
+        self.right_leg = o.right_leg
+        self.right_feet = o.right_feet
+
+        self.left_shoulder = o.left_shoulder
+        self.left_arm = o.left_arm
+        self.left_hand = o.left_hand
+        self.left_thumb = o.left_thumb
+        self.left_thigh = o.left_thigh
+        self.left_leg = o.left_leg
+        self.left_feet = o.left_feet
 
 # takes in the measurement of the position of each body joint and convert it to
 # center of mass position of each body parts
@@ -157,14 +182,15 @@ class BodyData:
 class BodyTracker:
 
     def __init__(self, total_mass, gender="male"):
-        self.pos = BodyData((1, 3))
-        self.prev_pos = BodyData((1, 3))
-        self.vel = BodyData((1, 3))
-        self.prev_vel = BodyData((1, 3))
+        self.visibility = BodyData(1)
+        self.pos = BodyData(3)
+        self.prev_pos = BodyData(3)
+        self.vel = BodyData(3)
+        self.prev_vel = BodyData(3)
         self.mass = BodyData(1)
-        self.momemtum = BodyData((1, 3))
-        self.prev_momemtum = BodyData((1, 3))
-        self.force = BodyData((1, 3))
+        self.momemtum = BodyData(3)
+        self.prev_momemtum = BodyData(3)
+        self.force = BodyData(3)
 
         self.male_mass_proportion = BodyData(1)
         self.female_mass_proportion = BodyData(1)
@@ -221,29 +247,54 @@ class BodyTracker:
 
     # update the position of the body
     def read_pos(self, world_landmarks):
+        np_world_landmarks = []
 
-        self.prev_pos = self.pos
-        self.pos.body = 0.25 * (world_landmarks[12] + world_landmarks[11] + world_landmarks[24] + world_landmarks[23])
-        self.pos.head = world_landmarks[0]
-        self.pos.left_shoulder = 0.5 * (world_landmarks[11] + world_landmarks[13])
-        self.pos.left_arm = 0.5 * (world_landmarks[13] + world_landmarks[15])
-        self.pos.left_hand = 0.333 * (world_landmarks[15] + world_landmarks[19] + world_landmarks[17])
-        self.pos.left_thumb = 0.5 * (world_landmarks[15] + world_landmarks[21])
-        self.pos.left_thigh = 0.5 * (world_landmarks[23] + world_landmarks[25])
-        self.pos.left_leg = 0.5 * (world_landmarks[25] + world_landmarks[27])
-        self.pos.left_feet = 0.333 * (world_landmarks[27] + world_landmarks[29] + world_landmarks[31])
-        self.pos.right_shoulder = 0.5 * (world_landmarks[12] + world_landmarks[14])
-        self.pos.right_arm = 0.5 * (world_landmarks[14] + world_landmarks[16])
-        self.pos.right_hand = 0.333 * (world_landmarks[16] + world_landmarks[18] + world_landmarks[20])
-        self.pos.right_thumb = 0.5 * (world_landmarks[16] + world_landmarks[22])
-        self.pos.right_thigh = 0.5 * (world_landmarks[24] + world_landmarks[26])
-        self.pos.right_leg = 0.5 * (world_landmarks[26] + world_landmarks[28])
-        self.pos.right_feet = 0.333 * (world_landmarks[28] + world_landmarks[30] + world_landmarks[32])
+        for i in range(len(world_landmarks)):
+            np_world_landmarks.append(np.array([world_landmarks[i].x, world_landmarks[i].y, world_landmarks[i].z]))
+
+        self.prev_pos.copy(self.pos)
+
+        self.pos.body = 0.25 * (np_world_landmarks[12] + np_world_landmarks[11] + np_world_landmarks[24] + np_world_landmarks[23])
+        self.pos.head = np_world_landmarks[0]
+        self.pos.left_shoulder = 0.5 * (np_world_landmarks[11] + np_world_landmarks[13])
+        self.pos.left_arm = 0.5 * (np_world_landmarks[13] + np_world_landmarks[15])
+        self.pos.left_hand = 0.333 * (np_world_landmarks[15] + np_world_landmarks[19] + np_world_landmarks[17])
+        self.pos.left_thumb = 0.5 * (np_world_landmarks[15] + np_world_landmarks[21])
+        self.pos.left_thigh = 0.5 * (np_world_landmarks[23] + np_world_landmarks[25])
+        self.pos.left_leg = 0.5 * (np_world_landmarks[25] + np_world_landmarks[27])
+        self.pos.left_feet = 0.333 * (np_world_landmarks[27] + np_world_landmarks[29] + np_world_landmarks[31])
+        self.pos.right_shoulder = 0.5 * (np_world_landmarks[12] + np_world_landmarks[14])
+        self.pos.right_arm = 0.5 * (np_world_landmarks[14] + np_world_landmarks[16])
+        self.pos.right_hand = 0.333 * (np_world_landmarks[16] + np_world_landmarks[18] + np_world_landmarks[20])
+        self.pos.right_thumb = 0.5 * (np_world_landmarks[16] + np_world_landmarks[22])
+        self.pos.right_thigh = 0.5 * (np_world_landmarks[24] + np_world_landmarks[26])
+        self.pos.right_leg = 0.5 * (np_world_landmarks[26] + np_world_landmarks[28])
+        self.pos.right_feet = 0.333 * (np_world_landmarks[28] + np_world_landmarks[30] + np_world_landmarks[32])
+
+    # update the visibility of each body parts
+    def read_visibility(self, world_landmarks):
+        self.visibility.body = 0.25 * (world_landmarks[12].visibility + world_landmarks[11].visibility + world_landmarks[24].visibility + world_landmarks[23].visibility)
+        self.visibility.head = world_landmarks[0].visibility
+        self.visibility.left_shoulder = 0.5 * (world_landmarks[11].visibility + world_landmarks[13].visibility)
+        self.visibility.left_arm = 0.5 * (world_landmarks[13].visibility + world_landmarks[15].visibility)
+        self.visibility.left_hand = 0.333 * (world_landmarks[15].visibility + world_landmarks[19].visibility + world_landmarks[17].visibility)
+        self.visibility.left_thumb = 0.5 * (world_landmarks[15].visibility + world_landmarks[21].visibility)
+        self.visibility.left_thigh = 0.5 * (world_landmarks[23].visibility + world_landmarks[25].visibility)
+        self.visibility.left_leg = 0.5 * (world_landmarks[25].visibility + world_landmarks[27].visibility)
+        self.visibility.left_feet = 0.333 * (world_landmarks[27].visibility + world_landmarks[29].visibility + world_landmarks[31].visibility)
+        self.visibility.right_shoulder = 0.5 * (world_landmarks[12].visibility + world_landmarks[14].visibility)
+        self.visibility.right_arm = 0.5 * (world_landmarks[14].visibility + world_landmarks[16].visibility)
+        self.visibility.right_hand = 0.333 * (world_landmarks[16].visibility + world_landmarks[18].visibility + world_landmarks[20].visibility)
+        self.visibility.right_thumb = 0.5 * (world_landmarks[16].visibility + world_landmarks[22].visibility)
+        self.visibility.right_thigh = 0.5 * (world_landmarks[24].visibility + world_landmarks[26].visibility)
+        self.visibility.right_leg = 0.5 * (world_landmarks[26].visibility + world_landmarks[28].visibility)
+        self.visibility.right_feet = 0.333 * (world_landmarks[28].visibility + world_landmarks[30].visibility + world_landmarks[32].visibility)
 
     # updates all physical quantity of the body
     def update(self, world_landmarks, delta_time):
 
         self.read_pos(world_landmarks)
+        self.read_visibility(world_landmarks)
 
         self.prev_vel = self.vel
         self.vel = (self.pos - self.prev_pos) / delta_time
@@ -251,7 +302,7 @@ class BodyTracker:
         self.prev_momemtum = self.momemtum
         self.momemtum = self.mass * self.vel
 
-        self.force = (self.momemtum - self.prev_momemtum) / delta_time
+        self.force = ((self.momemtum - self.prev_momemtum) / delta_time) * self.visibility
     
 
 

@@ -97,8 +97,9 @@ class CameraProcessor:
         #retrieve the list of world_landmark positions
         if results.pose_world_landmarks:
             world_landmarks = results.pose_world_landmarks.landmark
-            self.body_tracker.update(world_landmarks, 0.1)
-        print("test")
+            self.body_tracker.update(world_landmarks, 0.01)
+            print(f"Speed: {self.body_tracker.vel.get_mag()}m/s")
+            print(f"Force: {self.body_tracker.force.get_mag()}N")
 
         # Extract landmarks and process
         try:
