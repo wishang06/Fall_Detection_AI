@@ -8,7 +8,7 @@ import mediapipe as mp
 #.     a dimension of (1, 3) will sotre a vector in each body part
 class BodyData:
     
-    def _init__(self, dimension):
+    def __init__(self, dimension):
         self.dimension = dimension
         self.head = np.zeros(dimension)
         self.body = np.zeros(dimension)
@@ -55,7 +55,7 @@ class BodyData:
     def __mul__(self, o: float) -> Self: ...
 
     def __mul__(self, o: object) -> Self:
-        if (isinstance(o, Self)):
+        if (isinstance(o, BodyData)):
             result = BodyData(self.dimension)
             result.head = self.head * o.head
             result.body = self.body * o.body
@@ -98,6 +98,20 @@ class BodyData:
         
         return NotImplemented
     
+    @overload
+    def __rmul__(self, o: Self) -> Self: ...
+    
+    @overload
+    def __rmul__(self, o: float) -> Self: ...
+
+    def __rmul__(self, o: object) -> Self:
+        if (isinstance(o, BodyData)):
+            return o * self
+        elif (isinstance(o, float)):
+            return self * o
+        
+        return NotImplemented
+
     @overload
     def __truediv__(self, o: float) -> Self: ...
 
@@ -206,9 +220,7 @@ class BodyTracker:
 
 
     # update the position of the body
-    def read_pos(self, result):
-        #todo: figure out variable for world_landmarks
-        world_landmarks = result.pose_landmarks.worldlandmarks
+    def read_pos(self, world_landmarks):
 
         self.prev_pos = self.pos
         self.pos.body = 0.25 * (world_landmarks[12] + world_landmarks[11] + world_landmarks[24] + world_landmarks[23])
@@ -229,9 +241,9 @@ class BodyTracker:
         self.pos.right_feet = 0.333 * (world_landmarks[28] + world_landmarks[30] + world_landmarks[32])
 
     # updates all physical quantity of the body
-    def update(self, result, delta_time):
+    def update(self, world_landmarks, delta_time):
 
-        self.read_pos(result)
+        self.read_pos(world_landmarks)
 
         self.prev_vel = self.vel
         self.vel = (self.pos - self.prev_pos) / delta_time

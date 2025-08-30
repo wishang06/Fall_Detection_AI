@@ -5,6 +5,7 @@ import numpy as np
 import json
 import threading
 import time
+from src.track import BodyData, BodyTracker
 
 app = Flask(__name__)
 
@@ -32,6 +33,7 @@ class CameraProcessor:
         self.cap = None
         self.pose = None
         self.running = False
+        self.body_tracker = BodyTracker(80.0)
         
     def start(self):
         self.cap = cv2.VideoCapture(0)
@@ -92,10 +94,14 @@ class CameraProcessor:
         image.flags.writeable = True
         image = cv2.cvtColor(image, cv2.COLOR_RGB2BGR)
         
+        #retrieve the list of world_landmark positions
+        self.body_tracker.update(world_landmarks, 0.1)
+        print("test")
+
         # Extract landmarks and process
         try:
             landmarks = results.pose_landmarks.landmark
-            
+
             # Get coordinates (right leg)
             hip = [landmarks[mp_pose.PoseLandmark.RIGHT_HIP.value].x,
                    landmarks[mp_pose.PoseLandmark.RIGHT_HIP.value].y]
@@ -127,6 +133,7 @@ class CameraProcessor:
                         cv2.FONT_HERSHEY_SIMPLEX, 0.8, (255, 255, 0), 2)
             
         except:
+            
             pass
         
         # Render pose landmarks
