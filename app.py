@@ -95,7 +95,9 @@ class CameraProcessor:
         image = cv2.cvtColor(image, cv2.COLOR_RGB2BGR)
         
         #retrieve the list of world_landmark positions
-        self.body_tracker.update(world_landmarks, 0.1)
+        if results.pose_world_landmarks:
+            world_landmarks = results.pose_world_landmarks.landmark
+            self.body_tracker.update(world_landmarks, 0.1)
         print("test")
 
         # Extract landmarks and process
