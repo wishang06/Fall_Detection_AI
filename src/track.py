@@ -1,6 +1,7 @@
 from typing import Self, overload
 import numpy as np;
 import mediapipe as mp
+from datetime import datetime, timedelta
 
 # a data type as a storage for physical quantity measurement of each body part
 # data could have dimension which is the dimension of the tensor
@@ -183,6 +184,9 @@ class BodyTracker:
 
     def __init__(self, total_mass, gender="male"):
         self.visibility = BodyData(1)
+        self.time = datetime.now()
+        self.prev_time = datetime.now()
+
         self.pos = BodyData(3)
         self.prev_pos = BodyData(3)
         self.vel = BodyData(3)
@@ -295,6 +299,10 @@ class BodyTracker:
 
         self.read_pos(world_landmarks)
         self.read_visibility(world_landmarks)
+
+        self.prev_time = self.time
+        self.time = datetime.now()
+        delta_time = (float)((self.time - self.prev_time).microseconds) / 1000000.0
 
         self.prev_vel = self.vel
         self.vel = (self.pos - self.prev_pos) / delta_time
