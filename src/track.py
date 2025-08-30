@@ -1,15 +1,11 @@
-# tracks the position of each joint of human body
-# and calculate the velocity of each joint
-# uses a compute matrix to calculate the momemtum of each sticks
-# uses inner product to compute the net momemtum
-# uses the momemtum vector to compute the force vector on each body part
-# uses inner produce to compute the net force on body
-# analyse force on the body and decide if client need help
-
 from typing import Self, overload
 import numpy as np;
 import mediapipe as mp
 
+# a data type as a storage for physical quantity measurement of each body part
+# data could have dimension which is the dimension of the tensor
+# e.g. a dimension of 1 will store a scalar in each body part
+#.     a dimension of (1, 3) will sotre a vector in each body part
 class BodyData:
     
     def _init__(self, dimension):
@@ -141,6 +137,9 @@ class BodyData:
     def get_net_mag(self):
         return np.linalg.norm(self.get_net())
 
+# takes in the measurement of the position of each body joint and convert it to
+# center of mass position of each body parts
+# use the center of mass position of each body parts to compute the net momemtum of each body parts
 class BodyTracker:
 
     def __init__(self, total_mass, gender="male"):
