@@ -100,6 +100,7 @@ class CameraProcessor:
             self.body_tracker.update(world_landmarks, 0.01)
             print(f"Speed: {self.body_tracker.vel.get_mag()}m/s")
             print(f"Force: {self.body_tracker.force.get_mag()}N")
+            print(f"Net upward Force: {self.body_tracker.force.get_net()[2]}N")
 
         # Extract landmarks and process
         try:

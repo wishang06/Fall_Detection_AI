@@ -2,6 +2,7 @@ from typing import Self, overload
 import numpy as np;
 import mediapipe as mp
 from datetime import datetime, timedelta
+import math
 
 # a data type as a storage for physical quantity measurement of each body part
 # data could have dimension which is the dimension of the tensor
@@ -9,6 +10,8 @@ from datetime import datetime, timedelta
 #.     a dimension of (1, 3) will sotre a vector in each body part
 class BodyData:
     
+
+
     def __init__(self, dimension):
         self.dimension = dimension
         self.head = np.zeros(dimension)
@@ -181,7 +184,6 @@ class BodyData:
 # center of mass position of each body parts
 # use the center of mass position of each body parts to compute the net momemtum of each body parts
 class BodyTracker:
-
     def __init__(self, total_mass, gender="male"):
         self.visibility = BodyData(1)
         self.time = datetime.now()
@@ -201,6 +203,8 @@ class BodyTracker:
         
         self.setup_mass_proportion()
         self.setup_mass(total_mass, gender)
+
+        self.VISIBILITY_THRESHOLD = 0.3
 
     # loads the value of male mass proportion and female mass proportion
     # using reference to https://robslink.com/SAS/democd79/body_part_weights.htm
@@ -293,6 +297,24 @@ class BodyTracker:
         self.visibility.right_thigh = 0.5 * (world_landmarks[24].visibility + world_landmarks[26].visibility)
         self.visibility.right_leg = 0.5 * (world_landmarks[26].visibility + world_landmarks[28].visibility)
         self.visibility.right_feet = 0.333 * (world_landmarks[28].visibility + world_landmarks[30].visibility + world_landmarks[32].visibility)
+
+        self.visibility.head = math.ceil(self.visibility.head - self.VISIBILITY_THRESHOLD)
+        self.visibility.body = math.ceil(self.visibility.body - self.VISIBILITY_THRESHOLD)
+        self.visibility.left_shoulder = math.ceil(self.visibility.left_shoulder - self.VISIBILITY_THRESHOLD)
+        self.visibility.left_arm = math.ceil(self.visibility.left_arm - self.VISIBILITY_THRESHOLD)
+        self.visibility.left_hand = math.ceil(self.visibility.left_hand - self.VISIBILITY_THRESHOLD)
+        self.visibility.left_thumb = math.ceil(self.visibility.left_thumb - self.VISIBILITY_THRESHOLD)
+        self.visibility.left_thigh = math.ceil(self.visibility.left_thigh - self.VISIBILITY_THRESHOLD)
+        self.visibility.left_leg = math.ceil(self.visibility.left_leg - self.VISIBILITY_THRESHOLD)
+        self.visibility.left_feet = math.ceil(self.visibility.left_feet - self.VISIBILITY_THRESHOLD)
+        self.visibility.right_shoulder = math.ceil(self.visibility.right_shoulder - self.VISIBILITY_THRESHOLD)
+        self.visibility.right_arm = math.ceil(self.visibility.right_arm - self.VISIBILITY_THRESHOLD)
+        self.visibility.right_hand = math.ceil(self.visibility.right_hand - self.VISIBILITY_THRESHOLD)
+        self.visibility.right_thumb = math.ceil(self.visibility.right_thumb - self.VISIBILITY_THRESHOLD)
+        self.visibility.right_thigh = math.ceil(self.visibility.right_thigh - self.VISIBILITY_THRESHOLD)
+        self.visibility.right_leg = math.ceil(self.visibility.right_leg - self.VISIBILITY_THRESHOLD)
+        self.visibility.right_feet = math.ceil(self.visibility.right_feet - self.VISIBILITY_THRESHOLD)
+        
 
     # updates all physical quantity of the body
     def update(self, world_landmarks, delta_time):
