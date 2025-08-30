@@ -151,12 +151,17 @@ def generate_frames():
 
 @app.route('/')
 def index():
-    return render_template('index.html')
+    return app.send_static_file('index.html')
+    #return render_template('index.html')
 
 @app.route('/video_feed')
 def video_feed():
     return Response(generate_frames(),
                     mimetype='multipart/x-mixed-replace; boundary=frame')
+
+@app.route('/<path:filename>')
+def send_script(filename):
+    return app.send_static_file(filename)
 
 @app.route('/start_camera', methods=['POST'])
 def start_camera():

@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Physaio - Movement Tracker</title>
+    <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>Physaio Movement Tracker</h1>
+            <p>AI-powered physiotherapy exercise monitoring with real-time feedback</p>
+        </div>
+
+        <div class="main-content">
+            <div class="video-section">
+                <div class="video-container">
+                    <img id="videoFeed" src="" alt="Video Feed" style="display: none;">
+                    <div id="videoPlaceholder" class="video-placeholder">
+                        <div>
+                            <h3>Camera Not Active</h3>
+                            <p>Click "Start Camera" to begin movement tracking</p>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="button-group">
+                    <button id="startBtn" class="button success">Start Camera</button>
+                    <button id="stopBtn" class="button danger">Stop Camera</button>
+                    <button id="resetBtn" class="button">Reset Counter</button>
+                </div>
+                
+                <div id="statusMessage"></div>
+            </div>
+
+            <div class="controls-section">
+                <div class="stats-panel">
+                    <h3>Exercise Stats</h3>
+                    <div class="stat-item">
+                        <span class="stat-label">Repetitions:</span>
+                        <span id="repCount" class="stat-value">0</span>
+                    </div>
+                    <div class="stat-item">
+                        <span class="stat-label">Current Stage:</span>
+                        <span id="currentStage" class="stat-value">-</span>
+                    </div>
+                </div>
+
+                <div class="settings-panel">
+                    <h3>Camera Settings</h3>
+                    
+                    <div class="setting-group">
+                        <label for="brightness">Brightness</label>
+                        <div class="slider-container">
+                            <input type="range" id="brightness" class="slider" min="0" max="100" value="50">
+                            <span class="slider-value">50</span>
+                        </div>
+                    </div>
+
+                    <div class="setting-group">
+                        <label for="contrast">Contrast</label>
+                        <div class="slider-container">
+                            <input type="range" id="contrast" class="slider" min="0" max="100" value="50">
+                            <span class="slider-value">50</span>
+                        </div>
+                    </div>
+
+                    <div class="setting-group">
+                        <label for="saturation">Saturation</label>
+                        <div class="slider-container">
+                            <input type="range" id="saturation" class="slider" min="0" max="100" value="50">
+                            <span class="slider-value">50</span>
+                        </div>
+                    </div>
+
+                    <h3 style="margin-top: 30px;">Detection Settings</h3>
+                    
+                    <div class="setting-group">
+                        <label for="detectionConfidence">Detection Confidence</label>
+                        <div class="slider-container">
+                            <input type="range" id="detectionConfidence" class="slider" min="0.1" max="1.0" step="0.1" value="0.7">
+                            <span class="slider-value">0.7</span>
+                        </div>
+                    </div>
+
+                    <div class="setting-group">
+                        <label for="trackingConfidence">Tracking Confidence</label>
+                        <div class="slider-container">
+                            <input type="range" id="trackingConfidence" class="slider" min="0.1" max="1.0" step="0.1" value="0.7">
+                            <span class="slider-value">0.7</span>
+                        </div>
+                    </div>
+
+                    <div class="setting-group">
+                        <label for="angleThresholdDown">Squat Down Angle (degrees)</label>
+                        <div class="slider-container">
+                            <input type="range" id="angleThresholdDown" class="slider" min="60" max="120" value="90">
+                            <span class="slider-value">90</span>
+                        </div>
+                    </div>
+
+                    <div class="setting-group">
+                        <label for="angleThresholdUp">Squat Up Angle (degrees)</label>
+                        <div class="slider-container">
+                            <input type="range" id="angleThresholdUp" class="slider" min="140" max="180" value="160">
+                            <span class="slider-value">160</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <script src="script.js"></script>
+</body>
+</html>
