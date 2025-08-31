@@ -29,9 +29,18 @@
                     <button id="startBtn" class="button success">Start Camera</button>
                     <button id="stopBtn" class="button danger">Stop Camera</button>
                     <button id="resetBtn" class="button">Reset Counter</button>
+                    <button id="clearFallBtn" class="button warning" style="display: none;">Clear Fall Alert</button>
                 </div>
                 
                 <div id="statusMessage"></div>
+                
+                <div id="fallAlert" class="fall-alert" style="display: none;">
+                    <div class="fall-alert-content">
+                        <h3>⚠️ FALL DETECTED!</h3>
+                        <p>A fall has been detected. Please check on the person immediately.</p>
+                        <p id="fallTime"></p>
+                    </div>
+                </div>
             </div>
 
             <div class="controls-section">

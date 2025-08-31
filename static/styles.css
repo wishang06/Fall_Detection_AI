@@ -261,6 +261,54 @@ body {
     border: 1px solid #f5c6cb;
 }
 
+.fall-alert {
+    background: linear-gradient(135deg, #ff4757 0%, #ff3838 100%);
+    color: white;
+    border-radius: 10px;
+    padding: 20px;
+    margin: 20px 0;
+    box-shadow: 0 10px 30px rgba(255, 71, 87, 0.4);
+    animation: pulse 2s infinite;
+    border: 3px solid #ff1744;
+}
+
+.fall-alert-content h3 {
+    font-size: 1.5em;
+    margin-bottom: 10px;
+    text-align: center;
+    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+}
+
+.fall-alert-content p {
+    margin: 8px 0;
+    text-align: center;
+    font-size: 1.1em;
+}
+
+.button.warning {
+    background: linear-gradient(135deg, #ffa726 0%, #ff9800 100%);
+    box-shadow: 0 4px 15px rgba(255, 167, 38, 0.3);
+}
+
+.button.warning:hover {
+    box-shadow: 0 6px 20px rgba(255, 167, 38, 0.4);
+}
+
+@keyframes pulse {
+    0% {
+        box-shadow: 0 10px 30px rgba(255, 71, 87, 0.4);
+        transform: scale(1);
+    }
+    50% {
+        box-shadow: 0 15px 40px rgba(255, 71, 87, 0.6);
+        transform: scale(1.02);
+    }
+    100% {
+        box-shadow: 0 10px 30px rgba(255, 71, 87, 0.4);
+        transform: scale(1);
+    }
+}
+
 @media (max-width: 768px) {
     .main-content {
         grid-template-columns: 1fr;

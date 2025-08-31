@@ -5,9 +5,12 @@ let statsInterval;
 const startBtn = document.getElementById('startBtn');
 const stopBtn = document.getElementById('stopBtn');
 const resetBtn = document.getElementById('resetBtn');
+const clearFallBtn = document.getElementById('clearFallBtn');
 const videoFeed = document.getElementById('videoFeed');
 const videoPlaceholder = document.getElementById('videoPlaceholder');
 const statusMessage = document.getElementById('statusMessage');
+const fallAlert = document.getElementById('fallAlert');
+const fallTime = document.getElementById('fallTime');
 
 // Settings sliders
 const sliders = {
@@ -33,6 +36,7 @@ Object.keys(sliders).forEach(key => {
 startBtn.addEventListener('click', startCamera);
 stopBtn.addEventListener('click', stopCamera);
 resetBtn.addEventListener('click', resetCounter);
+clearFallBtn.addEventListener('click', clearFallAlert);
 
 function showStatus(message, type = 'success') {
     statusMessage.innerHTML = `<div class="status-message status-${type}">${message}</div>`;
@@ -123,6 +127,29 @@ async function resetCounter() {
     }
 }
 
+async function clearFallAlert() {
+    try {
+        const response = await fetch('/clear_fall_alert', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            }
+        });
+        
+        const data = await response.json();
+        
+        if (data.status === 'success') {
+            fallAlert.style.display = 'none';
+            clearFallBtn.style.display = 'none';
+            showStatus('Fall alert cleared', 'success');
+        } else {
+            showStatus('Failed to clear fall alert', 'error');
+        }
+    } catch (error) {
+        showStatus('Error clearing fall alert: ' + error.message, 'error');
+    }
+}
+
 async function updateStats() {
     if (!cameraActive) return;
     
@@ -130,10 +157,54 @@ async function updateStats() {
         const response = await fetch('/get_stats');
         const data = await response.json();
         
-        // Stats are now displayed on the video feed itself
+        // Handle fall detection alerts
+        if (data.fall_detected && fallAlert.style.display === 'none') {
+            // Show fall alert
+            fallAlert.style.display = 'block';
+            clearFallBtn.style.display = 'inline-block';
+            
+            // Update fall time
+            if (data.fall_alert_time) {
+                const fallDateTime = new Date(data.fall_alert_time);
+                fallTime.textContent = `Fall detected at: ${fallDateTime.toLocaleString()}`;
+            }
+            
+            // Play alert sound using Web Audio API
+            try {
+                playAlertSound();
+            } catch (audioError) {
+                console.log('Could not play alert sound:', audioError);
+            }
+        }
+        
+        // Hide fall alert if no longer detected
+        if (!data.fall_detected && fallAlert.style.display === 'block') {
+            fallAlert.style.display = 'none';
+            clearFallBtn.style.display = 'none';
+        }
+        
     } catch (error) {
         console.error('Error updating stats:', error);
     }
+}
+
+function playAlertSound() {
+    // Create a simple beep sound using Web Audio API
+    const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+    const oscillator = audioContext.createOscillator();
+    const gainNode = audioContext.createGain();
+    
+    oscillator.connect(gainNode);
+    gainNode.connect(audioContext.destination);
+    
+    oscillator.frequency.value = 800; // 800 Hz tone
+    oscillator.type = 'sine';
+    
+    gainNode.gain.setValueAtTime(0.3, audioContext.currentTime);
+    gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 1);
+    
+    oscillator.start(audioContext.currentTime);
+    oscillator.stop(audioContext.currentTime + 1);
 }
 
 async function updateSettings() {

@@ -5,6 +5,7 @@ import numpy as np
 import json
 import threading
 import time
+from datetime import datetime, timedelta
 from src.track import BodyData, BodyTracker
 
 app = Flask(__name__)
@@ -18,6 +19,8 @@ camera = None
 pose_processor = None
 counter = 0
 stage = None
+fall_detected = False
+fall_alert_time = None
 camera_settings = {
     'brightness': 50,
     'contrast': 50,
@@ -26,12 +29,118 @@ camera_settings = {
     'tracking_confidence': 0.7
 }
 
+class FallDetector:
+    def __init__(self):
+        self.previous_positions = []
+        self.velocity_history = []
+        self.acceleration_history = []
+        self.position_history = []
+        self.max_history = 10
+        self.fall_threshold_velocity = -2.0  # m/s downward
+        self.fall_threshold_acceleration = -15.0  # m/s² downward
+        self.ground_proximity_threshold = 0.3  # relative to frame height
+        self.stability_threshold = 0.1  # for detecting if person is stable
+        self.fall_detected = False
+        self.fall_start_time = None
+        self.recovery_time = 3.0  # seconds to wait before clearing fall alert
+        
+    def detect_fall(self, landmarks, frame_height, frame_width):
+        global fall_detected, fall_alert_time
+        
+        if not landmarks:
+            return False
+            
+        try:
+            # Get key body points
+            head = landmarks[mp_pose.PoseLandmark.NOSE.value]
+            left_shoulder = landmarks[mp_pose.PoseLandmark.LEFT_SHOULDER.value]
+            right_shoulder = landmarks[mp_pose.PoseLandmark.RIGHT_SHOULDER.value]
+            left_hip = landmarks[mp_pose.PoseLandmark.LEFT_HIP.value]
+            right_hip = landmarks[mp_pose.PoseLandmark.RIGHT_HIP.value]
+            left_ankle = landmarks[mp_pose.PoseLandmark.LEFT_ANKLE.value]
+            right_ankle = landmarks[mp_pose.PoseLandmark.RIGHT_ANKLE.value]
+            
+            # Calculate center of mass (approximate)
+            center_of_mass_y = (head.y + left_shoulder.y + right_shoulder.y + 
+                               left_hip.y + right_hip.y) / 5.0
+            center_of_mass_x = (head.x + left_shoulder.x + right_shoulder.x + 
+                               left_hip.x + right_hip.x) / 5.0
+            
+            current_position = np.array([center_of_mass_x, center_of_mass_y])
+            current_time = datetime.now()
+            
+            # Store position history
+            self.position_history.append((current_position, current_time))
+            if len(self.position_history) > self.max_history:
+                self.position_history.pop(0)
+            
+            # Calculate velocity and acceleration if we have enough history
+            if len(self.position_history) >= 3:
+                # Calculate velocity (change in position over time)
+                prev_pos, prev_time = self.position_history[-2]
+                dt = (current_time - prev_time).total_seconds()
+                if dt > 0:
+                    velocity = (current_position - prev_pos) / dt
+                    self.velocity_history.append(velocity)
+                    if len(self.velocity_history) > self.max_history:
+                        self.velocity_history.pop(0)
+                
+                # Calculate acceleration if we have velocity history
+                if len(self.velocity_history) >= 2:
+                    prev_velocity = self.velocity_history[-2]
+                    acceleration = (velocity - prev_velocity) / dt if dt > 0 else np.array([0, 0])
+                    self.acceleration_history.append(acceleration)
+                    if len(self.acceleration_history) > self.max_history:
+                        self.acceleration_history.pop(0)
+                    
+                    # Fall detection logic
+                    vertical_velocity = velocity[1]  # y-component (positive is down in image coordinates)
+                    vertical_acceleration = acceleration[1]
+                    
+                    # Check for rapid downward movement
+                    rapid_descent = vertical_velocity > abs(self.fall_threshold_velocity)
+                    
+                    # Check if person is close to ground (high y-coordinate)
+                    near_ground = center_of_mass_y > (1.0 - self.ground_proximity_threshold)
+                    
+                    # Check body orientation (horizontal vs vertical)
+                    head_to_hip_distance = abs(head.y - (left_hip.y + right_hip.y) / 2.0)
+                    horizontal_orientation = head_to_hip_distance < 0.3  # Person is lying down
+                    
+                    # Detect sudden impact (high acceleration)
+                    sudden_impact = vertical_acceleration > abs(self.fall_threshold_acceleration)
+                    
+                    # Fall detection conditions
+                    if (rapid_descent and near_ground) or horizontal_orientation or sudden_impact:
+                        if not self.fall_detected:
+                            self.fall_detected = True
+                            self.fall_start_time = current_time
+                            fall_detected = True
+                            fall_alert_time = current_time
+                            return True
+                    
+                    # Clear fall detection after recovery time
+                    if self.fall_detected and self.fall_start_time:
+                        time_since_fall = (current_time - self.fall_start_time).total_seconds()
+                        if time_since_fall > self.recovery_time:
+                            # Check if person has recovered (standing upright)
+                            if head_to_hip_distance > 0.4 and center_of_mass_y < 0.7:
+                                self.fall_detected = False
+                                fall_detected = False
+                                fall_alert_time = None
+                                
+        except Exception as e:
+            print(f"Fall detection error: {e}")
+            
+        return self.fall_detected
+
 class CameraProcessor:
     def __init__(self):
         self.cap = None
         self.pose = None
         self.running = False
         self.body_tracker = BodyTracker(80.0)
+        self.fall_detector = FallDetector()
         
     def start(self):
         self.cap = cv2.VideoCapture(0)
@@ -102,7 +211,11 @@ class CameraProcessor:
         # Extract landmarks and process
         try:
             landmarks = results.pose_landmarks.landmark
-
+            frame_height, frame_width = image.shape[:2]
+            
+            # Fall detection
+            is_falling = self.fall_detector.detect_fall(landmarks, frame_height, frame_width)
+            
             # Get coordinates (right leg)
             hip = [landmarks[mp_pose.PoseLandmark.RIGHT_HIP.value].x,
                    landmarks[mp_pose.PoseLandmark.RIGHT_HIP.value].y]
@@ -126,15 +239,23 @@ class CameraProcessor:
                 stage = "up"
                 counter += 1
             
-            # Show feedback
-            cv2.rectangle(image, (0, 0), (225, 90), (0, 0, 0), -1)
+            # Show feedback - expand the info box for fall detection
+            info_height = 130 if fall_detected else 90
+            cv2.rectangle(image, (0, 0), (300, info_height), (0, 0, 0), -1)
             cv2.putText(image, f"Reps: {counter}", (10, 30),
                         cv2.FONT_HERSHEY_SIMPLEX, 0.8, (0, 255, 0), 2)
             cv2.putText(image, f"Stage: {stage}", (10, 70),
                         cv2.FONT_HERSHEY_SIMPLEX, 0.8, (255, 255, 0), 2)
             
-        except:
+            # Fall detection alert
+            if fall_detected:
+                cv2.putText(image, "FALL DETECTED!", (10, 110),
+                            cv2.FONT_HERSHEY_SIMPLEX, 0.8, (0, 0, 255), 2)
+                # Add flashing red border for fall alert
+                cv2.rectangle(image, (0, 0), (frame_width-1, frame_height-1), (0, 0, 255), 10)
             
+        except Exception as e:
+            print(f"Processing error: {e}")
             pass
         
         # Render pose landmarks
@@ -195,8 +316,20 @@ def get_stats():
     return jsonify({
         'counter': counter,
         'stage': stage,
+        'fall_detected': fall_detected,
+        'fall_alert_time': fall_alert_time.isoformat() if fall_alert_time else None,
         'settings': camera_settings
     })
+
+@app.route('/clear_fall_alert', methods=['POST'])
+def clear_fall_alert():
+    global fall_detected, fall_alert_time
+    fall_detected = False
+    fall_alert_time = None
+    if camera and camera.fall_detector:
+        camera.fall_detector.fall_detected = False
+        camera.fall_detector.fall_start_time = None
+    return jsonify({'status': 'success', 'message': 'Fall alert cleared'})
 
 @app.route('/update_settings', methods=['POST'])
 def update_settings():
