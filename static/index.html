@@ -9,10 +9,9 @@
 <body>
     <div class="container">
         <div class="header">
-            <h1>Physaio Movement Tracker</h1>
-            <p>AI-powered physiotherapy exercise monitoring with real-time feedback</p>
+            <h1>Physaio Fall Detector</h1>
+            <p>AI-powered fall monitoring</p>
         </div>
-
         <div class="main-content">
             <div class="video-section">
                 <div class="video-container">
@@ -28,7 +27,6 @@
                 <div class="button-group">
                     <button id="startBtn" class="button success">Start Camera</button>
                     <button id="stopBtn" class="button danger">Stop Camera</button>
-                    <button id="resetBtn" class="button">Reset Counter</button>
                     <button id="clearFallBtn" class="button warning" style="display: none;">Clear Fall Alert</button>
                 </div>
                 
@@ -43,55 +41,6 @@
                 </div>
             </div>
 
-            <div class="controls-section">
-
-                <div class="settings-panel">
-                    <h3>Camera Settings</h3>
-                    
-                    <div class="setting-group">
-                        <label for="brightness">Brightness</label>
-                        <div class="slider-container">
-                            <input type="range" id="brightness" class="slider" min="0" max="100" value="50">
-                            <span class="slider-value">50</span>
-                        </div>
-                    </div>
-
-                    <div class="setting-group">
-                        <label for="contrast">Contrast</label>
-                        <div class="slider-container">
-                            <input type="range" id="contrast" class="slider" min="0" max="100" value="50">
-                            <span class="slider-value">50</span>
-                        </div>
-                    </div>
-
-                    <div class="setting-group">
-                        <label for="saturation">Saturation</label>
-                        <div class="slider-container">
-                            <input type="range" id="saturation" class="slider" min="0" max="100" value="50">
-                            <span class="slider-value">50</span>
-                        </div>
-                    </div>
-
-                    <h3 style="margin-top: 30px;">Detection Settings</h3>
-                    
-                    <div class="setting-group">
-                        <label for="detectionConfidence">Detection Confidence</label>
-                        <div class="slider-container">
-                            <input type="range" id="detectionConfidence" class="slider" min="0.1" max="1.0" step="0.1" value="0.7">
-                            <span class="slider-value">0.7</span>
-                        </div>
-                    </div>
-
-                    <div class="setting-group">
-                        <label for="trackingConfidence">Tracking Confidence</label>
-                        <div class="slider-container">
-                            <input type="range" id="trackingConfidence" class="slider" min="0.1" max="1.0" step="0.1" value="0.7">
-                            <span class="slider-value">0.7</span>
-                        </div>
-                    </div>
-
-                </div>
-            </div>
         </div>
     </div>
     <script src="script.js"></script>

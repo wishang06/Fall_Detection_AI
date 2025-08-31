@@ -4,7 +4,6 @@ let statsInterval;
 // DOM elements
 const startBtn = document.getElementById('startBtn');
 const stopBtn = document.getElementById('stopBtn');
-const resetBtn = document.getElementById('resetBtn');
 const clearFallBtn = document.getElementById('clearFallBtn');
 const videoFeed = document.getElementById('videoFeed');
 const videoPlaceholder = document.getElementById('videoPlaceholder');
@@ -12,30 +11,10 @@ const statusMessage = document.getElementById('statusMessage');
 const fallAlert = document.getElementById('fallAlert');
 const fallTime = document.getElementById('fallTime');
 
-// Settings sliders
-const sliders = {
-    brightness: document.getElementById('brightness'),
-    contrast: document.getElementById('contrast'),
-    saturation: document.getElementById('saturation'),
-    detectionConfidence: document.getElementById('detectionConfidence'),
-    trackingConfidence: document.getElementById('trackingConfidence')
-};
-
-// Initialize slider value displays
-Object.keys(sliders).forEach(key => {
-    const slider = sliders[key];
-    const valueDisplay = slider.parentElement.querySelector('.slider-value');
-    
-    slider.addEventListener('input', function() {
-        valueDisplay.textContent = this.value;
-        updateSettings();
-    });
-});
 
 // Button event listeners
 startBtn.addEventListener('click', startCamera);
 stopBtn.addEventListener('click', stopCamera);
-resetBtn.addEventListener('click', resetCounter);
 clearFallBtn.addEventListener('click', clearFallAlert);
 
 function showStatus(message, type = 'success') {
@@ -103,27 +82,6 @@ async function stopCamera() {
         }
     } catch (error) {
         showStatus('Error stopping camera: ' + error.message, 'error');
-    }
-}
-
-async function resetCounter() {
-    try {
-        const response = await fetch('/reset_counter', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            }
-        });
-        
-        const data = await response.json();
-        
-        if (data.status === 'success') {
-            showStatus('Counter reset successfully!', 'success');
-        } else {
-            showStatus('Failed to reset counter', 'error');
-        }
-    } catch (error) {
-        showStatus('Error resetting counter: ' + error.message, 'error');
     }
 }
 
@@ -207,32 +165,6 @@ function playAlertSound() {
     oscillator.stop(audioContext.currentTime + 1);
 }
 
-async function updateSettings() {
-    const settings = {};
-    
-    Object.keys(sliders).forEach(key => {
-        const value = parseFloat(sliders[key].value);
-        settings[key.replace(/([A-Z])/g, '_$1').toLowerCase()] = value;
-    });
-
-    try {
-        const response = await fetch('/update_settings', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify(settings)
-        });
-        
-        const data = await response.json();
-        
-        if (data.status !== 'success') {
-            console.error('Failed to update settings');
-        }
-    } catch (error) {
-        console.error('Error updating settings:', error);
-    }
-}
 
 // Initialize button states
 startBtn.disabled = false;
