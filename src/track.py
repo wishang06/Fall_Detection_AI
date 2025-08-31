@@ -275,13 +275,16 @@ class BodyTracker:
         self.force = BodyData(3)
         self.net_stress = BodyData(3)
 
+        self.horizontal_stress_record = [0] * 50
+        self.record_index = 0
+
         self.male_mass_proportion = BodyData(1)
         self.female_mass_proportion = BodyData(1)
         
         self.setup_mass_proportion()
         self.setup_mass(total_mass, gender)
 
-        self.weight = self.mass * np.array([0, 0, -9.8])
+        self.weight = self.mass * np.array([0, -9.8, 0])
 
         self.VISIBILITY_THRESHOLD = 0.3
 
@@ -331,15 +334,44 @@ class BodyTracker:
         else:
             return NotImplemented
 
+    # taking the camera direction as [0, 0, -1]
+    def get_screen_dir(self, normalized_screen_pos: np.ndarray, FOV = 60.0) -> np.ndarray:
+        x = np.array([1.0, 0.0, 0.0]) * math.tan(math.radians(FOV / 2.0))
+        y = np.array([0.0, 1.0, 0.0]) * (math.tan(math.radians(FOV / 2.0)) * 9.0 / 16.0)
+
+        v = x * normalized_screen_pos[0] + y * normalized_screen_pos[1] + np.array([0, 0, -1])
+
+        return v / np.linalg.norm(v)
+
+    # get the world hip position 
+    def get_hip_pos(self, world_landmarks, landmarks, FOV=60):
+        h1 = np.array([world_landmarks[23].x, world_landmarks[23].y, world_landmarks[23].z])
+        h2 = np.array([world_landmarks[24].x, world_landmarks[24].y, world_landmarks[24].z])
+
+        v = h2 - h1
+        s = landmarks[24].z / landmarks[23].z
+
+        r1_dir = self.get_screen_dir(np.array([landmarks[23].x, landmarks[23].y]))
+        r2_dir = self.get_screen_dir(np.array([landmarks[24].x, landmarks[24].y]))
+        r = 0
+        for i in range(3):
+            r += 0.333 * (v[i] / (s * r2_dir[i] - r1_dir[i]))
+
+        print(f"Estimated Hip distance: {r}")
+
+        return r * r1_dir + 0.5 * v
+
 
     # update the position of the body
-    def read_pos(self, world_landmarks):
+    def read_pos(self, world_landmarks, landmarks):
         np_world_landmarks = []
 
         for i in range(len(world_landmarks)):
             np_world_landmarks.append(np.array([world_landmarks[i].x, world_landmarks[i].y, world_landmarks[i].z]))
 
         self.prev_pos.copy(self.pos)
+
+        hip_mid_pos = self.get_hip_pos(world_landmarks, landmarks)
 
         self.pos.body = 0.25 * (np_world_landmarks[12] + np_world_landmarks[11] + np_world_landmarks[24] + np_world_landmarks[23])
         self.pos.head = np_world_landmarks[0]
@@ -357,6 +389,8 @@ class BodyTracker:
         self.pos.right_thigh = 0.5 * (np_world_landmarks[24] + np_world_landmarks[26])
         self.pos.right_leg = 0.5 * (np_world_landmarks[26] + np_world_landmarks[28])
         self.pos.right_feet = 0.333 * (np_world_landmarks[28] + np_world_landmarks[30] + np_world_landmarks[32])
+
+        self.pos = self.pos + hip_mid_pos
 
     # update the visibility of each body parts
     def read_visibility(self, world_landmarks):
@@ -396,9 +430,9 @@ class BodyTracker:
         
 
     # updates all physical quantity of the body
-    def update(self, world_landmarks, delta_time):
+    def update(self, world_landmarks, landmarks):
 
-        self.read_pos(world_landmarks)
+        self.read_pos(world_landmarks, landmarks)
         self.read_visibility(world_landmarks)
 
         self.prev_time = self.time
@@ -413,6 +447,11 @@ class BodyTracker:
 
         self.force = ((self.momemtum - self.prev_momemtum) / delta_time) * self.visibility
         self.net_stress = (self.force - self.weight) * self.visibility
+
+        self.horizontal_stress_record[self.record_index] = abs(self.net_stress.get_net()[1])
+        # goes to next index
+        self.record_index = (self.record_index + 1) % 50
+        print(f"Max Stress in last 5 second: {max(self.horizontal_stress_record)}")
     
 
 

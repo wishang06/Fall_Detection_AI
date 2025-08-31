@@ -202,9 +202,9 @@ class CameraProcessor:
         image = cv2.cvtColor(image, cv2.COLOR_RGB2BGR)
         
         #retrieve the list of world_landmark positions
-        if results.pose_world_landmarks:
+        if results.pose_world_landmarks and results.pose_landmarks:
             world_landmarks = results.pose_world_landmarks.landmark
-            self.body_tracker.update(world_landmarks, 0.01)
+            self.body_tracker.update(world_landmarks, results.pose_landmarks.landmark)
             print(f"Stress: {self.body_tracker.force.get_mag()}N")
             print(f"Net upward Stress: {self.body_tracker.force.get_net()[2]}N")
 
