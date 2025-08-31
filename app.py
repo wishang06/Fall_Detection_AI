@@ -23,9 +23,7 @@ camera_settings = {
     'contrast': 50,
     'saturation': 50,
     'detection_confidence': 0.7,
-    'tracking_confidence': 0.7,
-    'angle_threshold_down': 90,
-    'angle_threshold_up': 160
+    'tracking_confidence': 0.7
 }
 
 class CameraProcessor:
@@ -122,10 +120,10 @@ class CameraProcessor:
                         tuple(np.multiply(knee, [640, 480]).astype(int)),
                         cv2.FONT_HERSHEY_SIMPLEX, 0.8, (255, 255, 255), 2, cv2.LINE_AA)
             
-            # Squat detection logic
-            if angle < camera_settings['angle_threshold_down']:
+            # Squat detection logic with fixed thresholds
+            if angle < 90:  # Fixed down threshold
                 stage = "down"
-            if angle > camera_settings['angle_threshold_up'] and stage == "down":
+            if angle > 160 and stage == "down":  # Fixed up threshold
                 stage = "up"
                 counter += 1
             

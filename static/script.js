@@ -8,8 +8,6 @@ const resetBtn = document.getElementById('resetBtn');
 const videoFeed = document.getElementById('videoFeed');
 const videoPlaceholder = document.getElementById('videoPlaceholder');
 const statusMessage = document.getElementById('statusMessage');
-const repCount = document.getElementById('repCount');
-const currentStage = document.getElementById('currentStage');
 
 // Settings sliders
 const sliders = {
@@ -17,9 +15,7 @@ const sliders = {
     contrast: document.getElementById('contrast'),
     saturation: document.getElementById('saturation'),
     detectionConfidence: document.getElementById('detectionConfidence'),
-    trackingConfidence: document.getElementById('trackingConfidence'),
-    angleThresholdDown: document.getElementById('angleThresholdDown'),
-    angleThresholdUp: document.getElementById('angleThresholdUp')
+    trackingConfidence: document.getElementById('trackingConfidence')
 };
 
 // Initialize slider value displays
@@ -118,8 +114,6 @@ async function resetCounter() {
         const data = await response.json();
         
         if (data.status === 'success') {
-            repCount.textContent = '0';
-            currentStage.textContent = '-';
             showStatus('Counter reset successfully!', 'success');
         } else {
             showStatus('Failed to reset counter', 'error');
@@ -136,8 +130,7 @@ async function updateStats() {
         const response = await fetch('/get_stats');
         const data = await response.json();
         
-        repCount.textContent = data.counter || '0';
-        currentStage.textContent = data.stage || '-';
+        // Stats are now displayed on the video feed itself
     } catch (error) {
         console.error('Error updating stats:', error);
     }
