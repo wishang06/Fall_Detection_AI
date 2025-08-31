@@ -7,7 +7,7 @@ import math
 # a data type as a storage for physical quantity measurement of each body part
 # data could have dimension which is the dimension of the tensor
 # e.g. a dimension of 1 will store a scalar in each body part
-#.     a dimension of (1, 3) will sotre a vector in each body part
+#      a dimension of (1, 3) will sotre a vector in each body part
 class BodyData:
     
 
@@ -31,26 +31,55 @@ class BodyData:
         self.left_leg = np.zeros(dimension)
         self.left_feet = np.zeros(dimension)
 
-    def __add__(self, o: Self) -> Self:
-        result = BodyData(self.dimension)
-        result.head = self.head + o.head
-        result.body = self.body + o.body
-        result.right_shoulder = self.right_shoulder + o.right_shoulder
-        result.right_arm = self.right_arm + o.right_arm
-        result.right_hand = self.right_hand + o.right_hand
-        result.right_thumb = self.right_thumb + o.right_thumb
-        result.left_shoulder = self.left_shoulder + o.left_shoulder
-        result.left_arm = self.left_arm + o.left_arm
-        result.left_hand = self.left_hand + o.left_hand
-        result.left_thumb = self.left_thumb + o.left_thumb
-        result.right_thigh = self.right_thigh + o.right_thigh
-        result.right_leg = self.right_leg + o.right_leg
-        result.right_feet = self.right_feet + o.right_feet
-        result.left_thigh = self.left_thigh + o.left_thigh
-        result.left_leg = self.left_leg + o.left_leg
-        result.left_feet = self.left_feet + o.left_feet
+    @overload
+    def __add__(self, o: np.ndarray) -> Self: ...
 
-        return result
+    @overload
+    def __add__(self, o: Self) -> Self: ...
+
+    def __add__(self, o: object) -> Self:
+        if (isinstance(o, BodyData)):
+            result = BodyData((np.zeros(self.dimension) + np.zeros(o.dimension)).shape)
+            result.head = self.head + o.head
+            result.body = self.body + o.body
+            result.right_shoulder = self.right_shoulder + o.right_shoulder
+            result.right_arm = self.right_arm + o.right_arm
+            result.right_hand = self.right_hand + o.right_hand
+            result.right_thumb = self.right_thumb + o.right_thumb
+            result.left_shoulder = self.left_shoulder + o.left_shoulder
+            result.left_arm = self.left_arm + o.left_arm
+            result.left_hand = self.left_hand + o.left_hand
+            result.left_thumb = self.left_thumb + o.left_thumb
+            result.right_thigh = self.right_thigh + o.right_thigh
+            result.right_leg = self.right_leg + o.right_leg
+            result.right_feet = self.right_feet + o.right_feet
+            result.left_thigh = self.left_thigh + o.left_thigh
+            result.left_leg = self.left_leg + o.left_leg
+            result.left_feet = self.left_feet + o.left_feet
+
+            return result
+        elif (isinstance(o, np.ndarray)):
+            result = BodyData((np.zeros(self.dimension) + np.zeros(o.shape)).shape)
+            result.head = self.head + o
+            result.body = self.body + o
+            result.right_shoulder = self.right_shoulder + o
+            result.right_arm = self.right_arm + o
+            result.right_hand = self.right_hand + o
+            result.right_thumb = self.right_thumb + o
+            result.left_shoulder = self.left_shoulder + o
+            result.left_arm = self.left_arm + o
+            result.left_hand = self.left_hand + o
+            result.left_thumb = self.left_thumb + o
+            result.right_thigh = self.right_thigh + o
+            result.right_leg = self.right_leg + o
+            result.right_feet = self.right_feet + o
+            result.left_thigh = self.left_thigh + o
+            result.left_leg = self.left_leg + o
+            result.left_feet = self.left_feet + o
+
+            return result
+        
+        return NotImplemented
 
     @overload
     def __mul__(self, o: Self) -> Self: ...
@@ -58,9 +87,12 @@ class BodyData:
     @overload
     def __mul__(self, o: float) -> Self: ...
 
+    @overload
+    def __mul__(self, o: np.ndarray) -> Self: ...
+
     def __mul__(self, o: object) -> Self:
         if (isinstance(o, BodyData)):
-            result = BodyData(self.dimension)
+            result = BodyData((np.zeros(self.dimension) * np.zeros(o.dimension)).shape)
             result.head = self.head * o.head
             result.body = self.body * o.body
             result.right_shoulder = self.right_shoulder * o.right_shoulder
@@ -99,6 +131,27 @@ class BodyData:
             result.left_feet = self.left_feet * o
 
             return result
+        elif (isinstance(o, np.ndarray)):
+            result = BodyData((np.zeros(self.dimension) * np.zeros(o.shape)).shape)
+            result.head = self.head * o
+            result.body = self.body * o
+            result.right_shoulder = self.right_shoulder * o
+            result.right_arm = self.right_arm * o
+            result.right_hand = self.right_hand * o
+            result.right_thumb = self.right_thumb * o
+            result.left_shoulder = self.left_shoulder * o
+            result.left_arm = self.left_arm * o
+            result.left_hand = self.left_hand * o
+            result.left_thumb = self.left_thumb * o
+            result.right_thigh = self.right_thigh * o
+            result.right_leg = self.right_leg * o
+            result.right_feet = self.right_feet * o
+            result.left_thigh = self.left_thigh * o
+            result.left_leg = self.left_leg * o
+            result.left_feet = self.left_feet * o
+
+            return result
+
         
         return NotImplemented
     
@@ -108,11 +161,34 @@ class BodyData:
     @overload
     def __rmul__(self, o: float) -> Self: ...
 
+    @overload
+    def __rmul__(self, o: np.ndarray) -> Self: ...
+
     def __rmul__(self, o: object) -> Self:
         if (isinstance(o, BodyData)):
             return o * self
         elif (isinstance(o, float)):
             return self * o
+        elif (isinstance(o, np.ndarray)):
+            result = BodyData((np.zeros(o.shape) * np.zeros(self.dimension)).shape)
+            result.head = o * self.head
+            result.body = o * self.body
+            result.right_shoulder = o * self.right_shoulder
+            result.right_arm = o * self.right_arm
+            result.right_hand = o * self.right_hand
+            result.right_thumb = o * self.right_thumb
+            result.left_shoulder = o * self.left_shoulder
+            result.left_arm = o * self.left_arm
+            result.left_hand = o * self.left_hand
+            result.left_thumb = o * self.left_thumb
+            result.right_thigh = o * self.right_thigh
+            result.right_leg = o * self.right_leg
+            result.right_feet = o * self.right_feet
+            result.left_thigh = o * self.left_thigh
+            result.left_leg = o * self.left_leg
+            result.left_feet = o * self.left_feet
+
+            return result
         
         return NotImplemented
 
@@ -197,12 +273,15 @@ class BodyTracker:
         self.momemtum = BodyData(3)
         self.prev_momemtum = BodyData(3)
         self.force = BodyData(3)
+        self.net_stress = BodyData(3)
 
         self.male_mass_proportion = BodyData(1)
         self.female_mass_proportion = BodyData(1)
         
         self.setup_mass_proportion()
         self.setup_mass(total_mass, gender)
+
+        self.weight = self.mass * np.array([0, 0, -9.8])
 
         self.VISIBILITY_THRESHOLD = 0.3
 
@@ -333,6 +412,7 @@ class BodyTracker:
         self.momemtum = self.mass * self.vel
 
         self.force = ((self.momemtum - self.prev_momemtum) / delta_time) * self.visibility
+        self.net_stress = (self.force - self.weight) * self.visibility
     
 
 
