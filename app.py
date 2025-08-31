@@ -96,8 +96,11 @@ class CameraProcessor:
         if results.pose_world_landmarks:
             world_landmarks = results.pose_world_landmarks.landmark
             self.body_tracker.update(world_landmarks, 0.01)
-            print(f"Stress: {self.body_tracker.force.get_mag()}N")
-            print(f"Net upward Stress: {self.body_tracker.force.get_net()[2]}N")
+            height = self.body_tracker.get_height(world_landmarks)
+            if (height < 0.5):
+                print(f"Client falled: {height}")
+            else:
+                print(f"Client not falled: {height}")
 
         # Extract landmarks and process
         try:

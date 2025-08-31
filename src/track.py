@@ -331,6 +331,17 @@ class BodyTracker:
         else:
             return NotImplemented
 
+    def get_hip_mid_pos(self):
+        return np.zeros(3)
+    
+    # get the vertical height of the client
+    def get_height(self, world_landmarks):
+        height = []
+        for i in range(len(world_landmarks)):
+            if (world_landmarks[i].visibility > self.VISIBILITY_THRESHOLD):
+                height.append(world_landmarks[i].y)
+        
+        return max(height) - min(height)
 
     # update the position of the body
     def read_pos(self, world_landmarks):
@@ -393,7 +404,6 @@ class BodyTracker:
         self.visibility.right_thigh = math.ceil(self.visibility.right_thigh - self.VISIBILITY_THRESHOLD)
         self.visibility.right_leg = math.ceil(self.visibility.right_leg - self.VISIBILITY_THRESHOLD)
         self.visibility.right_feet = math.ceil(self.visibility.right_feet - self.VISIBILITY_THRESHOLD)
-        
 
     # updates all physical quantity of the body
     def update(self, world_landmarks, delta_time):
@@ -404,6 +414,7 @@ class BodyTracker:
         self.prev_time = self.time
         self.time = datetime.now()
         delta_time = (float)((self.time - self.prev_time).microseconds) / 1000000.0
+        print(f"FPS: {1.0 / delta_time}")
 
         self.prev_vel = self.vel
         self.vel = (self.pos - self.prev_pos) / delta_time
@@ -413,7 +424,7 @@ class BodyTracker:
 
         self.force = ((self.momemtum - self.prev_momemtum) / delta_time) * self.visibility
         self.net_stress = (self.force - self.weight) * self.visibility
-    
+
 
 
 
