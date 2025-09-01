@@ -331,30 +331,5 @@ def clear_fall_alert():
         camera.fall_detector.fall_start_time = None
     return jsonify({'status': 'success', 'message': 'Fall alert cleared'})
 
-@app.route('/update_settings', methods=['POST'])
-def update_settings():
-    global camera_settings
-    data = request.json
-    
-    # Update settings
-    for key, value in data.items():
-        if key in camera_settings:
-            camera_settings[key] = value
-    
-    # Apply camera settings if camera is running
-    if camera.running and camera.cap:
-        camera.cap.set(cv2.CAP_PROP_BRIGHTNESS, camera_settings['brightness'] / 100.0)
-        camera.cap.set(cv2.CAP_PROP_CONTRAST, camera_settings['contrast'] / 100.0)
-        camera.cap.set(cv2.CAP_PROP_SATURATION, camera_settings['saturation'] / 100.0)
-        
-        # Restart pose processor with new confidence settings
-        camera.pose.close()
-        camera.pose = mp_pose.Pose(
-            min_detection_confidence=camera_settings['detection_confidence'],
-            min_tracking_confidence=camera_settings['tracking_confidence']
-        )
-    
-    return jsonify({'status': 'success', 'settings': camera_settings})
-
 if __name__ == '__main__':
     app.run(debug=True, host='0.0.0.0', port=5001)
