@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Physaio - Movement Tracker</title>
+    <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>Physaio Fall Detector</h1>
+            <p>AI-powered fall monitoring</p>
+        </div>
+        <div class="main-content">
+            <div class="video-section">
+                <div class="video-container">
+                    <img id="videoFeed" src="" alt="Video Feed" style="display: none;">
+                    <div id="videoPlaceholder" class="video-placeholder">
+                        <div>
+                            <h3>Camera Not Active</h3>
+                            <p>Click "Start Camera" to begin movement tracking</p>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="button-group">
+                    <button id="startBtn" class="button success">Start Camera</button>
+                    <button id="stopBtn" class="button danger">Stop Camera</button>
+                    <button id="clearFallBtn" class="button warning" style="display: none;">Clear Fall Alert</button>
+                </div>
+                
+                <div id="statusMessage"></div>
+                
+                <div id="fallAlert" class="fall-alert" style="display: none;">
+                    <div class="fall-alert-content">
+                        <h3>⚠️ FALL DETECTED!</h3>
+                        <p>A fall has been detected. Please check on the person immediately.</p>
+                        <p id="fallTime"></p>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </div>
+    <script src="script.js"></script>
+</body>
+</html>
